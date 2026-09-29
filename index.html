@@ -54,7 +54,7 @@ small{color:var(--muted)}
 <div id="app"></div>
 </div>
 <script>
-var SCRIPT_URL='https://script.google.com/macros/s/AKfycbwsmr-6wOdbQOjti5wuUVOuF-Or-nOgevahf209A3IqZZ7m4zL_LNkBqaZG0242ZXsX/exec';
+var SCRIPT_URL='https://script.google.com/macros/s/AKfycbyOyp8bd2RvpeV-B3PoFM9x2IvFiAUxPGcstwrNxciFCOUg6XOZs-PgrLEguzxC56dJ/exec';
 var WA='542215057745',ALIAS='pizza.camp.cole';
 var DEF=[{id:1,n:'Promo Muzzarella',p:14000,m:'Muzza:2'},{id:2,n:'Promo Especial',p:16000,m:'Especial:2'},{id:3,n:'Promo Mix Muzza y Especial',p:15000,m:'Muzza:1,Especial:1'},{id:4,n:'Promo Mix Roquefort y Especial',p:16000,m:'Roquefort:1,Especial:1'},{id:8,n:'Promo Mix Roque y Muzzarella',p:15000,m:'Muzza:1,Roquefort:1'},{id:5,n:'Muzzarella',p:7500,m:'Muzza:1'},{id:6,n:'Especial',p:8500,m:'Especial:1'},{id:7,n:'Roquefort',p:9000,m:'Roquefort:1'}];
 var ON=SCRIPT_URL.indexOf('http')===0,S=null,AC=null,AO=[],Q={},C={n:'',t:'',c:'',id:''},TK=null,V='shop',ADM=false,KEY='',BUSY=false,MSG='',ASK=false,BAD=false;
@@ -75,7 +75,7 @@ function get(q){return fetch(SCRIPT_URL+'?'+q).then(function(r){return r.json()}
 function post(d){return fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(d)}).then(function(r){return r.json()})}
 function info(){return S.deadline?'<div class="note">📅 Cierre de pedidos: <b>'+fd(S.deadline)+'</b></div><div class="note">🏫 Retiro: <b>'+fd(ad(S.deadline,4))+'</b> (fecha fijada de antemano, 4 días después del cierre). Solo retiro.</div>':'<div class="note">Pronto abrimos la próxima tanda de pedidos.</div>'}
 function say(t){MSG=t;R();window.scrollTo(0,0)}
-function loginCard(){return '<div class="card"><h2>🔧 Ingresar como admin</h2><label>Clave de administrador</label><input id="k" type="password" autocomplete="current-password"><button class="btn" style="background:var(--primary)" onclick="login()">Entrar</button></div>'}
+function loginCard(){return '<div class="card"><h2>🔧 Ingresar como admin</h2><label>Clave de administrador</label><input id="k" type="password" autocomplete="current-password" enterkeyhint="go" onkeydown="if(event.key===\'Enter\')login()"><button class="btn" style="background:var(--primary)" onclick="login()">Entrar</button></div>'}
 function login(){KEY=($('k').value||'').trim();if(!KEY)return say('Escribí la clave.');say('Verificando…');loadAdmin()}
 function R(){var h=S?(V==='shop'?shop():V==='cart'?cart():V==='pay'?pay():tk()):'<div class="card">'+(BAD?'<b>No pudimos cargar la página.</b><button class="btn2" onclick="init()">Reintentar</button>':'Cargando…')+'</div>';$('app').innerHTML=(MSG?'<div class="note"><b>'+esc(MSG)+'</b></div>':'')+(ON?'':'<div class="note">⚠️ Modo prueba: falta conectar la planilla (SCRIPT_URL). Los pedidos no se guardan.</div>')+(ADM?admin():(ASK?loginCard():''))+h+'<div class="foot">🍕💚 Cada pizza que pedís ayuda a que los chicos de 4° grado de la primaria puedan vivir su campamento. ¡Gracias por sumarte!</div>'}
 function go(v){MSG='';if(v==='cart'&&!lines().length){MSG='Elegí al menos una pizza.';R();return}V=v;if(TK&&v!=='shop'&&v!=='cart'){TK.v=v;sv()}R();window.scrollTo(0,0)}
@@ -122,7 +122,7 @@ function savecfg(){post({action:'saveConfig',key:KEY,cfg:AC}).then(function(r){i
 function setpaid(i,v){AO[i].ok=v;post({action:'setPaid',key:KEY,id:AO[i].id,ok:v}).then(function(r){if(!r.ok){say('No se pudo guardar');loadAdmin()}else R()}).catch(function(){say('Sin conexión');loadAdmin()})}
 function delo(i){var id=AO[i].id;DEL=-1;post({action:'delOrder',key:KEY,id:id}).then(function(r){if(r.ok){AO.splice(i,1);say('Pedido '+id+' borrado.')}else say('No se pudo borrar: '+(r.error||''))}).catch(function(){say('Sin conexión. Reintentá.')})}
 function logout(){ADM=false;ASK=false;KEY='';AC=null;AO=[];EDIT=-1;DEL=-1;ED=null;try{sessionStorage.removeItem('pz_k')}catch(e){}try{history.replaceState(null,'',location.pathname)}catch(e){}MSG='Sesión de admin cerrada.';R();window.scrollTo(0,0)}
-function loadAdmin(){post({action:'admin',key:KEY}).then(function(d){if(d.error){try{sessionStorage.removeItem('pz_k')}catch(e){}KEY='';return say(d.error==='bloqueado'?'Demasiados intentos. Esperá unos minutos y probá de nuevo.':'Clave incorrecta.')}try{sessionStorage.setItem('pz_k',KEY)}catch(e){}AC=d.cfg;AO=d.orders;ADM=true;if(MSG==='Verificando…')MSG='';R()}).catch(function(){say('No se pudo conectar con la planilla (Apps Script). Revisá la URL y que el acceso sea "Cualquier persona".')})}
+function loadAdmin(){post({action:'admin',key:KEY}).then(function(d){if(d.error){try{sessionStorage.removeItem('pz_k')}catch(e){}KEY='';return say(d.error==='bloqueado'?'Demasiados intentos. Esperá unos minutos y probá de nuevo.':d.error==='clave'?'Clave incorrecta.':'La clave llegó, pero el Apps Script no tiene la versión nueva. Revisá que la URL sea la de la implementación actualizada.')}try{sessionStorage.setItem('pz_k',KEY)}catch(e){}AC=d.cfg;AO=d.orders;ADM=true;if(MSG==='Verificando…')MSG='';R()}).catch(function(){say('No se pudo conectar con la planilla (Apps Script). Revisá la URL y que el acceso sea "Cualquier persona".')})}
 function init(){BAD=false;if(!ON){S={deadline:'',nid:9,products:DEF};R();return}
 R();
 get('action=config').then(function(c){S=c;R()}).catch(function(){BAD=true;MSG='No pudimos leer la planilla. Revisá que la implementación de Apps Script esté como "Cualquier persona".';R()});
